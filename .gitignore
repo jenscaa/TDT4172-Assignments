@@ -3,3 +3,6 @@
 __pycache__/
 
 catboost_info/
+
+# File is too big
+Assignment2/unsupervised_data.csv
