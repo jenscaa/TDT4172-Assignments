@@ -1,0 +1,119 @@
+<!-- This html is generated with Chat-gpt -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MLP Architecture: 2 → 5 → 5 → 1</title>
+  <style>
+    :root {
+      --node: #ffffff;
+      --node-stroke: #222;
+      --edge: #888;
+      --bg: #f6f7fb;
+    }
+    body { margin: 0; padding: 0; background: var(--bg); font-family: sans-serif; }
+    .wrap { max-width: 980px; margin: 24px auto; padding: 16px; }
+    svg { width: 100%; height: auto; background: #fff; border-radius: 12px; border: 1px solid #ccc; }
+    .node { fill: var(--node); stroke: var(--node-stroke); stroke-width: 1.5; }
+    .node.input { stroke: #0ea5e9; }
+    .node.hidden { stroke: #22c55e; }
+    .node.output { stroke: #f97316; }
+    .label { font-size: 12px; fill: #111; text-anchor: middle; dominant-baseline: middle; }
+    .edge { stroke: var(--edge); stroke-width: 1.25; opacity: 0.9; }
+    .edge-label { font-size: 10px; fill: #374151; text-anchor: middle; dominant-baseline: middle; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>MLP Architecture: 2 → 5 → 5 → 1</h1>
+    <svg id="net" viewBox="0 0 980 500"></svg>
+  </div>
+  <script>
+    const layers = [2, 5, 5, 1]; // 2 → 5 → 5 → 1
+    const layerX = [90, 360, 630, 900];
+    const height = 500;
+
+    function yPositions(count, center=false) {
+      if (center) {
+        const spacing = 80;
+        const totalHeight = (count - 1) * spacing;
+        const startY = (height - totalHeight) / 2;
+        return Array.from({length: count}, (_, i) => startY + i * spacing);
+      } else {
+        const paddingTop = 60, paddingBottom = 60;
+        const usable = height - paddingTop - paddingBottom;
+        if (count === 1) return [height/2];
+        const gap = usable / (count - 1);
+        return Array.from({length: count}, (_, i) => paddingTop + i * gap);
+      }
+    }
+
+    const nodes = [];
+    layers.forEach((count, li) => {
+      const ys = yPositions(count, li===0);
+      ys.forEach((y, idx) => nodes.push({ layer: li, index: idx, x: layerX[li], y }));
+    });
+
+    const nodesByLayer = (l) => nodes.filter(n => n.layer === l);
+
+    const svg = document.getElementById('net');
+    const svgns = 'http://www.w3.org/2000/svg';
+
+    function line(x1, y1, x2, y2, cls='edge') {
+      const el = document.createElementNS(svgns, 'line');
+      el.setAttribute('x1', x1); el.setAttribute('y1', y1);
+      el.setAttribute('x2', x2); el.setAttribute('y2', y2);
+      el.setAttribute('class', cls);
+      el.setAttribute('stroke', '#888');
+      el.setAttribute('stroke-width', '1');
+      svg.appendChild(el);
+      return el;
+    }
+
+    function circle(cx, cy, r, cls='node') {
+      const el = document.createElementNS(svgns, 'circle');
+      el.setAttribute('cx', cx); el.setAttribute('cy', cy); el.setAttribute('r', r);
+      el.setAttribute('class', cls);
+      svg.appendChild(el);
+      return el;
+    }
+
+    function text(x, y, str, cls='label') {
+      const el = document.createElementNS(svgns, 'text');
+      el.setAttribute('x', x); el.setAttribute('y', y);
+      el.setAttribute('class', cls);
+      el.textContent = str;
+      svg.appendChild(el);
+      return el;
+    }
+
+    // Draw edges with labels
+    for (let l = 0; l < layers.length - 1; l++) {
+      const from = nodesByLayer(l);
+      const to = nodesByLayer(l+1);
+      from.forEach((a, ai) => {
+        to.forEach((b, bi) => {
+          const e = line(a.x, a.y, b.x, b.y, 'edge');
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2;
+          text(mx, my - 6, `w${l+1}_${ai+1},${bi+1}`, 'edge-label');
+        });
+      });
+    }
+
+    // Draw nodes with labels inside
+    nodes.forEach(n => {
+      let type = n.layer === 0 ? 'input' : (n.layer === layers.length - 1 ? 'output' : 'hidden');
+      circle(n.x, n.y, 20, `node ${type}`);
+      if (type === 'input') {
+        text(n.x, n.y+4, n.index === 0 ? 'x0' : 'x1');
+      } else if (type === 'hidden') {
+        text(n.x, n.y+4, '∑, f');
+      } else if (type === 'output') {
+        text(n.x, n.y+4, 'ŷ');
+      }
+    });
+  </script>
+</body>
+</html>
